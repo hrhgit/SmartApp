@@ -1,0 +1,28 @@
+.build/
+build/
+.swiftpm/
+.DS_Store
+*.sqlite*
+exports/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local-only guidance, research, and work records.
+/AGENTS.md
+/research/
+/worklog/
+
+# Local credentials.
+.env
+.env.*
+!.env.example
+
+# Personal data artifacts belong outside the source checkout.
+/data/
+/backups/
+/training/
+/models/
+identity-*.key
+registered-targets.json
+permission-status.json

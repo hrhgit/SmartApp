@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "SmartApp Browser Context",
+  "version": "0.4.0",
+  "description": "仅将当前前台活动页面变化发送到本机 SmartApp；不读取后台标签、网页正文或输入。",
+  "minimum_chrome_version": "120",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtv/FYXtojUXAP6AezvSEHB9DVRzl87+eu1YKkT8xt/xgYiO+qM+xLrVwBIiooaNDoIHlubWHGTgzEhW4+a1vfK8UpAd6VXKURavP8jrp8suVXv80YmSkX8ZJP9ouGxvlGAWyq1EkpGA6EGY87obHeWvWpgfhQlYIOj72Ei6Pa3LPE1R+7J3uTeNfaeObiAnFpLYiXtpoIbUeE1XFifNt2jIfWphQ1J0VPzIhX1ii/gtuqVKnLcuI5qpm4nRMfRRckGIg7mfwgPc8vYIqhRmmDEU7TTv242HBFFEfSxXlzIEyjVqfjrc/pIuLF4tEMvchWwD+3y+EYW9BsMS76TysFwIDAQAB",
+  "permissions": ["tabs", "webNavigation", "nativeMessaging", "alarms", "storage"],
+  "incognito": "not_allowed",
+  "background": {"service_worker": "background.js", "type": "module"},
+  "action": {"default_title": "SmartApp：点击重新连接", "default_popup": "popup.html"}
+}
