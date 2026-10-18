@@ -20,7 +20,7 @@
 
 - 新增原生绘制的光标与运动轨迹图标，ICNS 包含 10 个标准尺寸资源；安装后的系统设置列表已显示新图标，应用签名严格校验通过。
 - 发现两项系统权限开关虽已打开，应用查询仍为未授权。TCC 日志明确报告旧授权的代码签名要求与当前版本不匹配；仅重置 SmartApp 的输入监控和辅助功能旧记录，并重新为当前安装版本授权。
-- 正在运行的 `/Users/herh/Applications/SmartApp.app` 自身报告 `inputMonitoring=true`、`accessibility=true`；采集期间 `inputTapConnected=true`。无需重启 macOS。
+- 正在运行的 `~/Applications/SmartApp.app` 自身报告 `inputMonitoring=true`、`accessibility=true`；采集期间 `inputTapConnected=true`。无需重启 macOS。
 - 约 35 秒的现场复查保存 **639 条事件**：99 条指针移动、14 条鼠标按下/松开、484 条滚动，以及应用激活、窗口创建、焦点、心跳与会话事件。此次没有接收键盘或 `gesture.*` 事件，不能据此宣称这些项目已实测通过。
 - 复查会话为 `3183C01D-D87C-406D-9432-5F99E0B3F6AE`，数据保留在个人数据库；训练前可按会话排除此段复查记录。验收结束后已暂停，应用保持打开且两项授权有效。上方“个人数据库为空”仅描述最初无权限验收结束时的状态。
 

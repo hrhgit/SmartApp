@@ -8,9 +8,8 @@ exports/
 __pycache__/
 *.py[cod]
 
-# Local-only guidance, research, and work records.
+# Local-only guidance and raw work records.
 /AGENTS.md
-/research/
 /worklog/
 
 # Local credentials.

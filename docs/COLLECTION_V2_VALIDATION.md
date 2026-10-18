@@ -2,7 +2,7 @@
 
 > 历史验收记录：当前版本只采集前台到达，不恢复本记录中的后台库存行为。
 
-2026-09-17，Apple Silicon / macOS 27.0 / Swift 6.4。安装位置为 `/Users/herh/Applications/SmartApp.app`，版本 0.2.0（build 3）。
+2026-09-17，Apple Silicon / macOS 27.0 / Swift 6.4。安装位置为 `~/Applications/SmartApp.app`，版本 0.2.0（build 3）。
 
 ## 已完成
 

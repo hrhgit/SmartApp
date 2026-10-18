@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartApp 顺序学习曲线</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#fff,#17191d);--fg:light-dark(#222,#eee);--muted:light-dark(#5f6368,#b6bdc6);--line:light-dark(#d8dce1,#434952);--online:light-dark(#006da6,#6ac8ff);--frozen:light-dark(#b14b00,#ffbb75)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}main{max-width:1250px;margin:auto;padding:24px}h1{font-size:24px;font-weight:600;margin:0 0 12px}h2{font-size:17px;font-weight:500;margin:0}p{margin:8px 0;color:var(--muted)}label{display:block;margin-top:16px}select{font:inherit;max-width:100%;width:100%;padding:8px;margin:6px 0 14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:4px}.legend{display:flex;gap:24px;flex-wrap:wrap}.legend span{display:inline-flex;align-items:center;gap:8px}.legend i{width:28px;border-top:3px solid var(--online)}.legend .freeze{border-top:3px dashed var(--frozen)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px}.panel{min-width:0}.plot{position:relative}svg{display:block;width:100%;overflow:visible}svg text{font:12px system-ui,sans-serif;fill:var(--fg)}.gridline{stroke:var(--line);stroke-width:.65}.frame{fill:none;stroke:var(--line)}.on{stroke:var(--online);fill:none;stroke-width:2}.off{stroke:var(--frozen);fill:none;stroke-width:2;stroke-dasharray:6 4}.hint{min-height:3.5em;font-size:13px;font-variant-numeric:tabular-nums}.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--line);padding:8px;max-width:290px;font-size:13px;z-index:2;box-shadow:0 3px 12px #0002}.notes{margin-top:24px;border-top:1px solid var(--line);padding-top:12px}@media(max-width:780px){main{padding:16px}.grid{grid-template-columns:1fr;gap:16px}h1{font-size:21px}}
+</style>
+<style>.base{stroke:light-dark(#008269,#71dfb7);fill:none;stroke-width:2}.legend i.baseline-swatch{border-color:light-dark(#008269,#71dfb7)}.legend span[hidden]{display:none}</style>
+</head>
+<body><main>
+<h1>按历史顺序学习：持续更新与冻结对照</h1>
+<p id="scope"></p>
+<label for="model">模型／配置（182组；排序仅作描述，不自动选择或部署）</label>
+<select id="model" aria-controls="charts"></select>
+<div class="legend"><span><i></i>持续学习</span><span><i class="freeze"></i>预热后冻结</span><span>灰带：同窗口有证据样本不足10条</span></div>
+<div id="charts" class="grid"></div>
+<div class="notes"><p>综合分是Top1至Top4前缀最佳收益的均值×100（精确1、正确首页回退0.6、错误0），不是正确率。Top1／Top4另按精确目标计分。</p>
+<p>最近100条合法预测，每10条滑动；末尾补一个完整窗口。两个集合用同一时间区间，横轴不是固定天数。点击或触碰曲线可查看窗口时间、样本数与分数。</p>
+<p>这是假设当时只知道历史的回放，不是独立新测试。两臂看到相同的当时上下文；冻结臂停止所有监督更新、学得词表及转移统计。原270／94固定总榜未变，不与本轮分数直接相减。</p></div>
+</main>
+<script>
+const data = /*__CURVE_DATA__*/ null;
+const picker = document.getElementById('model'), charts = document.getElementById('charts');
+const preferred = data.preferred_model || 'joint/linear_smooth_top2_lr0.1_seed20260923';
+document.querySelector('label[for="model"]').textContent=`模型／配置（${data.order.length}组；排序仅作描述，不自动选择或部署）`;
+let baselineLegend;
+if(data.baseline_name){baselineLegend=document.createElement('span');const swatch=document.createElement('i');swatch.className='baseline-swatch';baselineLegend.append(swatch,document.createTextNode('无情景统计主基准 · 持续更新'));document.querySelector('.legend').append(baselineLegend)}
+document.getElementById('scope').textContent = `预热${data.plan.warmup_actual_outcomes}次独立成熟行为 · 完整合法预测${data.plan.sizes.all}条 · 有证据${data.plan.sizes.evidence_total}条 · ${data.windows.length}个滚动窗口`;
+for(const name of data.order){const option=document.createElement('option');option.value=name;option.textContent=name;picker.append(option)}
+picker.value=preferred in data.models?preferred:data.order[0];
+const ns='http://www.w3.org/2000/svg';
+function node(tag,attrs={},text){const n=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n}
+function draw(panel,group,metric){
+ const host=panel.querySelector('.plot'),hint=panel.querySelector('.hint');host.replaceChildren();
+ const width=Math.max(280,host.clientWidth),height=255,left=48,right=16,top=14,bottom=46;
+ const model=picker.value, a=data.models[model].online[group],b=data.models[model].frozen[group],wins=data.windows;
+ const baseValues=data.baseline_name?data.models[data.baseline_name].online[group]:null;
+ const first=wins[0].end,last=wins.at(-1).end;
+ const x=v=>left+(v-first)/(last-first)*(width-left-right),y=v=>top+(100-v)/100*(height-top-bottom);
+ const svg=node('svg',{viewBox:`0 0 ${width} ${height}`,role:'img','aria-label':panel.querySelector('h2').textContent});host.append(svg);
+ svg.append(node('title',{},`${model}：在线学习与冻结的滚动比较`));
+ for(const value of [0,25,50,75,100]){svg.append(node('line',{x1:left,x2:width-right,y1:y(value),y2:y(value),class:'gridline'}));svg.append(node('text',{x:left-8,y:y(value)+4,'text-anchor':'end'},value))}
+ const ticks=width<400?[first,Math.round((first+last)/2),last]:[first,300,500,700,last];
+ for(const value of ticks){svg.append(node('text',{x:x(value),y:height-bottom+20,'text-anchor':value===first?'start':value===last?'end':'middle'},value))}
+ svg.append(node('text',{x:(left+width-right)/2,y:height-3,'text-anchor':'middle'},'预热后预测序号'));
+ svg.append(node('text',{x:4,y:12},metric===0?'分':'%'));
+ if(group==='evidence_total')wins.forEach(w=>{if(w.evidence_n<10){const begin=Math.max(first,w.end-5),end=Math.min(last,w.end+5);svg.append(node('rect',{x:x(begin),y:top,width:x(end)-x(begin),height:height-top-bottom,fill:'var(--muted)',opacity:.14}))}});
+ svg.append(node('rect',{x:left,y:top,width:width-left-right,height:height-top-bottom,class:'frame'}));
+ for(const [values,cls]of [[a,'on'],[b,'off']]){let path='',connected=false;values.forEach((v,i)=>{if(v[metric]===null){connected=false;return}path+=(connected?'L':'M')+x(wins[i].end)+','+y(v[metric]);connected=true});svg.append(node('path',{d:path,class:cls}))}
+ if(baseValues&&model!==data.baseline_name){const path=baseValues.map((v,i)=>(i?'L':'M')+x(wins[i].end)+','+y(v[metric])).join('');svg.append(node('path',{d:path,class:'base'}))}
+ const guide=node('line',{x1:0,x2:0,y1:top,y2:height-bottom,stroke:'var(--muted)',visibility:'hidden'});svg.append(guide);
+ const tip=document.createElement('div');tip.className='tip';tip.hidden=true;host.append(tip);
+ const fmt=v=>v===null?'暂无样本':v.toFixed(2),gname=group==='all'?'全部':'有证据';
+ const gain=i=>baseValues&&model!==data.baseline_name?` · 主基准 ${fmt(baseValues[i][metric])}，差值 ${(a[i][metric]-baseValues[i][metric]).toFixed(2)}${metric===0?'分':'百分点'}`:'';
+ const show=i=>{const w=wins[i],n=group==='all'?w.all_n:w.evidence_n;hint.textContent=`${gname} n=${n}，覆盖 ${((group==='all'?1:w.evidence_n/w.all_n)*100).toFixed(0)}% · 窗口 ${w.start}–${w.end} · 在线 ${fmt(a[i][metric])} ／ 冻结 ${fmt(b[i][metric])}${gain(i)}${group==='evidence_total'&&n<10?' · 样本不足':''}`};show(wins.length-1);
+ const overlay=node('rect',{x:left,y:top,width:width-left-right,height:height-top-bottom,fill:'transparent'});svg.append(overlay);
+ function inspect(event){const box=svg.getBoundingClientRect(),px=(event.clientX-box.left)*width/box.width;const value=first+(px-left)/(width-left-right)*(last-first);let i=0;for(let j=1;j<wins.length;j++)if(Math.abs(wins[j].end-value)<Math.abs(wins[i].end-value))i=j;const w=wins[i];show(i);guide.setAttribute('x1',x(w.end));guide.setAttribute('x2',x(w.end));guide.setAttribute('visibility','visible');tip.replaceChildren();for(const text of [`样本 ${w.start}–${w.end} · 有证据 ${w.evidence_n}/${w.all_n}`,`${w.start_time.slice(0,16).replace('T',' ')} →`,`${w.end_time.slice(0,16).replace('T',' ')}（太平洋时间）`,`在线 ${fmt(a[i][metric])} ／ 冻结 ${fmt(b[i][metric])}${gain(i)}`]){const line=document.createElement('div');line.textContent=text;tip.append(line)}tip.hidden=false;tip.style.left=Math.max(0,Math.min(width-290,px+12))+'px';tip.style.top='18px'}
+ overlay.addEventListener('pointermove',inspect);overlay.addEventListener('click',inspect);overlay.addEventListener('pointerleave',()=>{tip.hidden=true;guide.setAttribute('visibility','hidden')});
+}
+const panels=[];
+for(const [metric,title]of ['综合分','精确Top1正确率','精确Top4正确率'].entries())for(const [group,label]of [['all','完整合法预测'],['evidence_total','同窗口有证据子集']]){const panel=document.createElement('section');panel.className='panel';const heading=document.createElement('h2');heading.textContent=title+' · '+label;const plot=document.createElement('div');plot.className='plot';const hint=document.createElement('p');hint.className='hint';hint.setAttribute('aria-live','polite');panel.append(heading,plot,hint);charts.append(panel);panels.push([panel,group,metric])}
+function render(){if(baselineLegend)baselineLegend.hidden=picker.value===data.baseline_name;for(const p of panels)draw(...p)}picker.addEventListener('change',render);new ResizeObserver(render).observe(charts);render();
+</script>
+</body></html>
